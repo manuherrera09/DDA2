@@ -6,7 +6,6 @@ import LocationFields from '../components/LocationFields'
 import ProgressBar from '../components/ProgressBar'
 import SectionHeading from '../components/SectionHeading'
 import SuccessMessage from '../components/SuccessMessage'
-import SummaryCard from '../components/SummaryCard'
 import TradeInOptions from '../components/TradeInOptions'
 import VehicleSelection from '../components/VehicleSelection'
 import { vehicles } from '../data/vehicles'
@@ -29,7 +28,6 @@ const initialForm = {
 function PrequalificationView() {
   const [form, setForm] = useState(initialForm)
   const [submitted, setSubmitted] = useState(false)
-  const selectedVehicle = vehicles.find((vehicle) => vehicle.id === form.vehicle)
 
   function updateField(event) {
     const { name, value, type, checked } = event.target
@@ -52,13 +50,13 @@ function PrequalificationView() {
       <BrandHeader />
       <div className="page-grid">
         <section className="form-column">
-          <div className="eyebrow">Precalificación comercial <span>•</span> 01 de 02</div>
+          <div className="eyebrow">Precalificación comercial</div>
           <h1>Encontremos tu<br /><i>próximo vehículo.</i></h1>
           <p className="intro">Completá tus datos y preferencias. Un asesor de DDA Motors te va a contactar para continuar.</p>
           <ProgressBar financing={form.financing} />
 
           <form onSubmit={handleSubmit}>
-            <SectionHeading number="01" title="Datos de contacto" description="¿Cómo podemos encontrarte?" />
+            <SectionHeading title="Datos de contacto" description="¿Cómo podemos encontrarte?" />
             <ContactFields form={form} onChange={updateField} />
 
             <div className="section-gap"><SectionHeading number="02" title="Tu próximo vehículo" description="Elegí una opción de nuestro stock disponible." /></div>
@@ -77,7 +75,6 @@ function PrequalificationView() {
 
           {submitted && <SuccessMessage name={form.name} financing={form.financing} hasCuil={Boolean(form.cuil)} onReset={resetForm} />}
         </section>
-        <SummaryCard vehicle={selectedVehicle} downPayment={form.downPayment} financing={form.financing} />
       </div>
     </main>
   )

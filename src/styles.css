@@ -36,6 +36,7 @@ button, input, select { font: inherit; } button { cursor: pointer; }
 	.form-column { order: 1; min-width: 0; }
 	.summary-column { order: 2; }
 	h1 { font-size: clamp(38px, 12vw, 50px); margin-top: 19px; }
+	h1 { text-align: center; }
 	.intro { font-size: 12px; line-height: 1.65; }
 	.progress { margin: 31px 0 38px; }
 	.progress small { font-size: 8px; }
@@ -72,5 +73,14 @@ button, input, select { font: inherit; } button { cursor: pointer; }
 @media (max-width: 560px) {
 	.large-vehicle { transform: translateY(-25px) scale(.88) skew(-7deg) rotate(-4deg); }
 	.visual-caption { z-index: 2; }
+}
+
+/* Single-column layout after removing the selection summary. */
+.page-grid { display: block; max-width: 760px; }
+.form-column { max-width: 760px; margin: 0 auto; }
+
+@media (max-width: 560px) {
+	.page-grid { max-width: none; }
+	.form-column { max-width: none; }
 }
 
