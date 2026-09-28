@@ -8,6 +8,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<PreformularioPage />} />
+        <Route path="/preformulario" element={<PreformularioPage />} />
         <Route path="/cola-telemarketer" element={<ColaTelemarketerPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
