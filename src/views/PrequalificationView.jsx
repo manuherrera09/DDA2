@@ -9,10 +9,13 @@ import SuccessMessage from '../components/SuccessMessage'
 import TradeInOptions from '../components/TradeInOptions'
 import VehicleSelection from '../components/VehicleSelection'
 import { vehicles } from '../data/vehicles'
+import { fieldValidators, validateForm } from '../utils/validators'
 
 const initialForm = {
-  name: '',
+  firstName: '',
+  lastName: '',
   phone: '',
+  email: '',
   vehicle: '',
   downPayment: '',
   tradeIn: 'no',
@@ -30,15 +33,30 @@ function PrequalificationView() {
   const [submitted, setSubmitted] = useState(false)
   const [step, setStep] = useState(1)
   const [leadId, setLeadId] = useState('')
+  const [errors, setErrors] = useState({})
 
   function updateField(event) {
     const { name, value, type, checked } = event.target
     setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
+    if (errors[name]) setErrors((current) => ({ ...current, [name]: fieldValidators[name](value) }))
     setSubmitted(false)
+  }
+
+  function validateField(event) {
+    const { name, value } = event.target
+    if (fieldValidators[name]) setErrors((current) => ({ ...current, [name]: fieldValidators[name](value) }))
   }
 
   function handleSubmit(event) {
     event.preventDefault()
+    if (step === 1) {
+      const found = validateForm(form)
+      setErrors(found)
+      if (Object.keys(found).length) {
+        document.querySelector('.field-invalid input')?.focus()
+        return
+      }
+    }
     if (form.financing && step === 1) {
       setStep(2)
       return
@@ -53,6 +71,7 @@ function PrequalificationView() {
     setSubmitted(false)
     setStep(1)
     setLeadId('')
+    setErrors({})
   }
 
   return (
@@ -68,7 +87,7 @@ function PrequalificationView() {
           <form onSubmit={handleSubmit}>
             {step === 1 && <>
               <SectionHeading title="Datos de contacto" description="¿Cómo podemos encontrarte?" />
-              <ContactFields form={form} onChange={updateField} />
+              <ContactFields form={form} errors={errors} onChange={updateField} onBlur={validateField} />
 
               <div className="section-gap"><SectionHeading number="02" title="Tu próximo vehículo" description="Elegí una opción de nuestro stock disponible." /></div>
               <VehicleSelection vehicles={vehicles} selectedId={form.vehicle} downPayment={form.downPayment} financing={form.financing} onChange={updateField} />
@@ -94,7 +113,7 @@ function PrequalificationView() {
             </div>
           </form>
 
-          {submitted && <SuccessMessage name={form.name} financing={form.financing} hasCuil={Boolean(form.cuil)} leadId={leadId} onReset={resetForm} />}
+          {submitted && <SuccessMessage name={form.firstName} financing={form.financing} hasCuil={Boolean(form.cuil)} leadId={leadId} onReset={resetForm} />}
         </section>
       </div>
     </main>

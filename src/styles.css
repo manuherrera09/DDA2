@@ -88,3 +88,6 @@ button, input, select { font: inherit; } button { cursor: pointer; }
 	.queue-shell { padding: 30px 20px 50px; }.queue-header { display: block; padding-bottom: 25px; }.queue-header h1 { font-size: 43px; }.queue-link { display: inline-block; margin-top: 25px; }.queue-toolbar { display: block; }.filter-group { overflow-x: auto; padding-bottom: 4px; margin-top: 17px; }.filter-group button { white-space: nowrap; }.queue-layout { grid-template-columns: 1fr; }.lead-table-head { display: none; }.lead-row { grid-template-columns: 1fr auto; gap: 13px; padding: 17px 4px; }.lead-row > span:nth-child(2), .lead-row > span:nth-child(4) { display: none; }.lead-detail, .empty-detail { min-height: 0; padding: 20px; }
 }
 
+
+.field-error { color: #b3402a; font-size: 10px; font-style: normal; font-weight: 500; }
+.field-invalid input:not([type=radio]):not([type=checkbox]), .field-invalid select { border-color: #b3402a; }
