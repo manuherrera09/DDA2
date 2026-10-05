@@ -89,5 +89,6 @@ button, input, select { font: inherit; } button { cursor: pointer; }
 }
 
 
-.field-error { color: #b3402a; font-size: 10px; font-style: normal; font-weight: 500; }
+.field-error { display: block; min-height: 14px; line-height: 14px; color: #b3402a; font-size: 10px; font-style: normal; font-weight: 500; }
+.field { align-content: start; }
 .field-invalid input:not([type=radio]):not([type=checkbox]), .field-invalid select { border-color: #b3402a; }

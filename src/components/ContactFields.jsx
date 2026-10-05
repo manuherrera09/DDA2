@@ -6,18 +6,18 @@ function ContactFields({ form, errors, onChange, onBlur }) {
   return (
     <>
       <div className="field-row">
-        <FormField label="Nombre" error={errors.firstName}>
+        <FormField label="Nombre" error={errors.firstName ?? ''}>
           <input {...props('firstName')} placeholder="Ej. Martina" autoComplete="given-name" />
         </FormField>
-        <FormField label="Apellido" error={errors.lastName}>
+        <FormField label="Apellido" error={errors.lastName ?? ''}>
           <input {...props('lastName')} placeholder="Ej. López" autoComplete="family-name" />
         </FormField>
       </div>
       <div className="field-row">
-        <FormField label="Teléfono / WhatsApp" error={errors.phone}>
+        <FormField label="Teléfono / WhatsApp" error={errors.phone ?? ''}>
           <input {...props('phone')} type="tel" inputMode="tel" placeholder="11 5555 5555" autoComplete="tel" />
         </FormField>
-        <FormField label="Email" optional error={errors.email}>
+        <FormField label="Email" optional error={errors.email ?? ''}>
           <input {...props('email')} type="text" inputMode="email" placeholder="nombre@gmail.com" autoComplete="email" />
         </FormField>
       </div>
