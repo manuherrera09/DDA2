@@ -1,5 +1,5 @@
 export function formatCurrency(value, currency = 'ARS') {
-  return new Intl.NumberFormat('es-AR', { style: 'currency', currency }).format(value || 0)
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value || 0)
 }
 
 export function formatDate(value) {
@@ -9,4 +9,8 @@ export function formatDate(value) {
 
 export function formatPhone(value) {
   return value ? String(value).replace(/\s+/g, ' ').trim() : '-'
+}
+
+export function formatKm(value) {
+  return `${new Intl.NumberFormat('es-AR').format(value || 0)} km`
 }
