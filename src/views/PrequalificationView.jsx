@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import BrandHeader from '../components/BrandHeader'
+import Captcha from '../components/Captcha'
 import ContactFields from '../components/ContactFields'
 import FinancingDetails from '../components/FinancingDetails'
 import LocationFields from '../components/LocationFields'
@@ -9,6 +10,7 @@ import SuccessMessage from '../components/SuccessMessage'
 import TradeInOptions from '../components/TradeInOptions'
 import VehicleSelection from '../components/VehicleSelection'
 import { vehicles } from '../data/vehicles'
+import { createChallenge, isCorrectAnswer } from '../utils/captcha'
 import { fieldValidators, validateForm } from '../utils/validators'
 
 const initialForm = {
@@ -34,6 +36,16 @@ function PrequalificationView() {
   const [step, setStep] = useState(1)
   const [leadId, setLeadId] = useState('')
   const [errors, setErrors] = useState({})
+  const [challenge, setChallenge] = useState(createChallenge)
+  const [captchaAnswer, setCaptchaAnswer] = useState('')
+  const [captchaError, setCaptchaError] = useState('')
+  const isFinalStep = !(step === 1 && form.financing)
+
+  function refreshCaptcha() {
+    setChallenge(createChallenge())
+    setCaptchaAnswer('')
+    setCaptchaError('')
+  }
 
   function updateField(event) {
     const { name, value, type, checked } = event.target
@@ -62,6 +74,18 @@ function PrequalificationView() {
       return
     }
 
+    if (!isCorrectAnswer(challenge, captchaAnswer)) {
+      setCaptchaError(captchaAnswer.trim() ? 'La respuesta no es correcta, probá con otra operación.' : 'Resolvé la operación para enviar el formulario.')
+      if (captchaAnswer.trim()) {
+        // Respuesta incorrecta: nueva operación, pero se conserva el mensaje de error.
+        setChallenge(createChallenge())
+        setCaptchaAnswer('')
+      }
+      document.getElementById('captcha-answer')?.focus()
+      return
+    }
+
+    refreshCaptcha()
     setLeadId(`DDA-${Date.now().toString().slice(-6)}`)
     setSubmitted(true)
   }
@@ -72,6 +96,7 @@ function PrequalificationView() {
     setStep(1)
     setLeadId('')
     setErrors({})
+    refreshCaptcha()
   }
 
   return (
@@ -105,6 +130,8 @@ function PrequalificationView() {
               <FinancingDetails form={form} onChange={updateField} />
               <p className="step-note">Podés continuar sin completar este paso. En ese caso calificaremos tu consulta sin situación crediticia.</p>
             </div>}
+
+            {isFinalStep && <Captcha challenge={challenge} value={captchaAnswer} error={captchaError} onChange={(event) => { setCaptchaAnswer(event.target.value); setCaptchaError('') }} onRefresh={refreshCaptcha} />}
 
             <div className="submit-row">
               {step === 2 && <button type="button" className="secondary-button" onClick={() => { setStep(1); setForm((current) => ({ ...current, financing: false })) }}>Ahora no</button>}
