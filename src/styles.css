@@ -157,3 +157,6 @@ button, input, select { font: inherit; } button { cursor: pointer; }
 	.captcha-row { flex-wrap: wrap; }
 	.captcha-question { flex-basis: 100%; }
 }
+
+/* El logo del header es el mismo favicon.svg que usa la pestaña */
+img.brand-mark { display: block; background: none; border-radius: 0; }
