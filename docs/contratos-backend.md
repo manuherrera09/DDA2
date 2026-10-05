@@ -80,7 +80,7 @@ Es el servicio principal del front (RF01–RF03, RF07, RF08).
   "nombre": "Martina",
   "apellido": "López",
   "telefono": "11 5555 5555",
-  "email": "opcional@mail.com",
+  "email": "martina@gmail.com",
   "vehiculoId": "uuid",
   "anticipo": 3000000,
   "tienePermuta": true,
@@ -99,8 +99,8 @@ Es el servicio principal del front (RF01–RF03, RF07, RF08).
 - `cuil` y `consentimiento` solo si `solicitaFinanciacion = true`. Si el usuario omite el paso 2, se envía sin ellos y el lead se califica igual sin situación crediticia.
 - La respuesta es **inmediata (202)**: el front debe mostrar la confirmación con el `leadId` sin esperar la calificación.
 - **Nombre y apellido:** el documento solo habla de "nombre", pero el formulario los pide por separado (ambos obligatorios). Se sugiere enviarlos separados; si `leads` guarda un único `nombreContacto`, lo arma concatenando. **[A confirmar]**.
-- **Email:** el formulario lo pide como campo opcional y no figura en RF01. Si está, se valida que tenga "@" y dominio. `clientes` guarda un email en su modelo, pero hay que acordar si `leads` lo recibe y lo reenvía. **[A confirmar]**.
-- **Validaciones del front** (el backend debe repetirlas, porque el cliente no es confiable): nombre y apellido solo letras (mín. 2); teléfono de 10 a 13 dígitos, admite `+`, espacios, guiones y paréntesis; email opcional con formato válido. Los errores 4xx con `ProblemDetail` deberían poder asociarse a estos campos.
+- **Email y teléfono:** el formulario pide el **email como obligatorio** y el **teléfono/WhatsApp como opcional** (el documento pide teléfono en RF01 y no menciona el email, así que hay que acordarlo). Con esto un lead puede llegar sin teléfono, y la cola del telemarketer y la ficha deben tolerar `telefono` vacío o ausente. Se valida que el email tenga "@" y dominio. `clientes` guarda un email en su modelo, pero hay que acordar si `leads` lo recibe y lo reenvía. **[A confirmar]**.
+- **Validaciones del front** (el backend debe repetirlas, porque el cliente no es confiable): nombre y apellido solo letras (mín. 2); email obligatorio con formato válido; teléfono opcional y, si se completa, de 10 a 13 dígitos (admite `+`, espacios, guiones y paréntesis). Los errores 4xx con `ProblemDetail` deberían poder asociarse a estos campos.
 - **Captcha:** hoy es una operación aritmética local, sin ninguna verificación en servidor ni campo en el `POST`. Si se quiere uno real (reCAPTCHA, Turnstile), el front enviaría un token y el gateway o `leads` tendrían que validarlo contra el proveedor con una clave secreta guardada en variables de entorno. **[A confirmar]** si se hace.
 
 **Cola del telemarketer.**

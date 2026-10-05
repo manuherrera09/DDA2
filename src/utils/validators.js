@@ -11,7 +11,7 @@ export function validateName(value, label = 'El nombre') {
 
 export function validatePhone(value) {
   const text = value.trim()
-  if (!text) return 'El teléfono es obligatorio.'
+  if (!text) return ''
   if (!/^\+?[\d\s()-]+$/.test(text)) return 'El teléfono solo puede contener números.'
   const digits = text.replace(/\D/g, '')
   if (digits.length < 10 || digits.length > 13) return 'Ingresá un teléfono válido con código de área (10 a 13 dígitos).'
@@ -20,7 +20,7 @@ export function validatePhone(value) {
 
 export function validateEmail(value) {
   const text = value.trim()
-  if (!text) return ''
+  if (!text) return 'El email es obligatorio.'
   if (!text.includes('@')) return 'El email debe incluir "@".'
   if (!EMAIL_REGEX.test(text)) return 'Ingresá un email válido, ej. nombre@gmail.com.'
   return ''
