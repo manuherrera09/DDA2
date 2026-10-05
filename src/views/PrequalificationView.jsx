@@ -94,7 +94,7 @@ function PrequalificationView() {
 
               <div className="section-gap"><SectionHeading number="03" title="Tu vehículo en parte de pago" description="Contanos si tenés una unidad para entregar." /></div>
               <TradeInOptions value={form.tradeIn} onChange={updateField} />
-              {form.tradeIn === 'yes' && <div className="field-row reveal"><label className="field"><span>Descripción de la unidad</span><input required name="tradeDescription" value={form.tradeDescription} onChange={updateField} placeholder="Marca, modelo y año" /></label><label className="field"><span>Valor estimado</span><input required name="tradeValue" value={form.tradeValue} onChange={updateField} placeholder="$ 0" /></label></div>}
+              {form.tradeIn === 'yes' && <div className="field-row reveal"><label className="field"><span>Descripción de la unidad</span><input required name="tradeDescription" value={form.tradeDescription} onChange={updateField} placeholder="Marca, modelo, año y kilometraje" /></label><label className="field"><span>Valor estimado</span><input required name="tradeValue" value={form.tradeValue} onChange={updateField} placeholder="$ 0" /></label></div>}
 
               <div className="section-gap"><SectionHeading number="04" title="¿Dónde estás?" description="Así asignamos el asesor más cercano." /></div>
               <LocationFields form={form} onChange={updateField} />
