@@ -185,3 +185,10 @@ select {
 	background-size: 12px 8px;
 	cursor: pointer;
 }
+
+.consent-field { display: grid; align-content: start; gap: 4px; }
+.consent-field .consent { padding-top: 23px; }
+.consent-field .field-error { margin-left: 24px; }
+@media (max-width: 560px) {
+	.consent-field .consent { padding-top: 0; }
+}
