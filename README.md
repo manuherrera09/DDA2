@@ -56,8 +56,8 @@ docs/             documentación para el equipo
 
 | Parte | Estado |
 |---|---|
-| Preformulario en dos pasos | Funcional. Al enviar no llama a ningún servicio: genera una referencia local. |
-| Validaciones | Nombre y apellido (solo letras), email obligatorio con formato válido, teléfono opcional (10 a 13 dígitos). |
+| Preformulario en dos pasos | Funcional. El segundo paso aparece solo si se solicita financiación y pide CUIL y consentimiento. Al enviar no llama a ningún servicio: genera una referencia local. |
+| Validaciones | Nombre y apellido (solo letras), email obligatorio con formato válido, teléfono opcional (10 a 13 dígitos). Si se solicita financiación, el CUIL es obligatorio y se valida (11 dígitos, prefijo 20/23/24/27 y dígito verificador) y el consentimiento también. |
 | Selección de vehículo | 12 vehículos hardcodeados en `src/data/vehicles.js`, con filtros en memoria por marca y modelo (autocompletado), caja, año, precio y kilómetros, y lista con scroll a partir de 6 unidades. `fotoUrl` es opcional: si falta, se muestra un bloque de color. |
 | Captcha | Operación aritmética local, antes del envío final. No verifica nada en servidor. |
 | Cola del telemarketer | Funcional sobre 3 leads de ejemplo; los cambios de estado y las correcciones viven solo en memoria. |

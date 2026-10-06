@@ -11,6 +11,7 @@ import TradeInOptions from '../components/TradeInOptions'
 import VehicleSelection from '../components/VehicleSelection'
 import { vehicles } from '../data/vehicles'
 import { createChallenge, isCorrectAnswer } from '../utils/captcha'
+import { formatCuil } from '../utils/formatters'
 import { fieldValidators, validateForm } from '../utils/validators'
 
 const initialForm = {
@@ -49,8 +50,9 @@ function PrequalificationView() {
 
   function updateField(event) {
     const { name, value, type, checked } = event.target
-    setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
-    if (errors[name]) setErrors((current) => ({ ...current, [name]: fieldValidators[name](value) }))
+    const next = type === 'checkbox' ? checked : name === 'cuil' ? formatCuil(value) : value
+    setForm((current) => ({ ...current, [name]: next }))
+    if (errors[name]) setErrors((current) => ({ ...current, [name]: fieldValidators[name](next) }))
     setSubmitted(false)
   }
 
@@ -61,13 +63,11 @@ function PrequalificationView() {
 
   function handleSubmit(event) {
     event.preventDefault()
-    if (step === 1) {
-      const found = validateForm(form)
-      setErrors(found)
-      if (Object.keys(found).length) {
-        document.querySelector('.field-invalid input')?.focus()
-        return
-      }
+    const found = validateForm(form, step)
+    setErrors(found)
+    if (Object.keys(found).length) {
+      document.querySelector('.field-invalid input')?.focus()
+      return
     }
     if (form.financing && step === 1) {
       setStep(2)
@@ -88,6 +88,13 @@ function PrequalificationView() {
     refreshCaptcha()
     setLeadId(`DDA-${Date.now().toString().slice(-6)}`)
     setSubmitted(true)
+  }
+
+  // Sin financiación no se pide CUIL: se descarta lo cargado y sus errores.
+  function skipFinancing() {
+    setStep(1)
+    setForm((current) => ({ ...current, financing: false, cuil: '', consent: false }))
+    setErrors((current) => ({ ...current, cuil: undefined, consent: undefined }))
   }
 
   function resetForm() {
@@ -127,20 +134,20 @@ function PrequalificationView() {
 
             {step === 2 && <div className="step-two reveal">
               <SectionHeading number="02" title="Financiación" description="Completá estos datos para evaluar alternativas." />
-              <FinancingDetails form={form} onChange={updateField} />
-              <p className="step-note">Podés continuar sin completar este paso. En ese caso calificaremos tu consulta sin situación crediticia.</p>
+              <FinancingDetails form={form} errors={errors} onChange={updateField} onBlur={validateField} />
+              <p className="step-note">El CUIL y el consentimiento son necesarios para evaluar la financiación. Si preferís no compartirlos, podés continuar sin solicitarla.</p>
             </div>}
 
             {isFinalStep && <Captcha challenge={challenge} value={captchaAnswer} error={captchaError} onChange={(event) => { setCaptchaAnswer(event.target.value); setCaptchaError('') }} onRefresh={refreshCaptcha} />}
 
             <div className="submit-row">
-              {step === 2 && <button type="button" className="secondary-button" onClick={() => { setStep(1); setForm((current) => ({ ...current, financing: false })) }}>Ahora no</button>}
+              {step === 2 && <button type="button" className="secondary-button" onClick={skipFinancing}>Seguir sin financiación</button>}
               <button type="submit">{step === 1 && form.financing ? 'Continuar' : 'Enviar preformulario'} <span>→</span></button>
               <p>Sin compromiso <span>·</span> Tus datos están protegidos</p>
             </div>
           </form>
 
-          {submitted && <SuccessMessage name={form.firstName} financing={form.financing} hasCuil={Boolean(form.cuil)} leadId={leadId} onReset={resetForm} />}
+          {submitted && <SuccessMessage name={form.firstName} leadId={leadId} onReset={resetForm} />}
         </section>
       </div>
     </main>
