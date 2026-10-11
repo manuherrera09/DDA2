@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import BrandHeader from '../components/BrandHeader'
 import Captcha from '../components/Captcha'
 import ContactFields from '../components/ContactFields'
@@ -9,7 +9,7 @@ import SectionHeading from '../components/SectionHeading'
 import SuccessMessage from '../components/SuccessMessage'
 import TradeInOptions from '../components/TradeInOptions'
 import VehicleSelection from '../components/VehicleSelection'
-import { vehicles } from '../data/vehicles'
+import { getVehicles } from '../api/vehiclesClient'
 import { createChallenge, isCorrectAnswer } from '../utils/captcha'
 import { formatCuil } from '../utils/formatters'
 import { fieldValidators, validateForm } from '../utils/validators'
@@ -32,6 +32,9 @@ const initialForm = {
 }
 
 function PrequalificationView() {
+  const [vehicles, setVehicles] = useState([])
+  const [vehiclesLoading, setVehiclesLoading] = useState(true)
+  const [vehiclesError, setVehiclesError] = useState('')
   const [form, setForm] = useState(initialForm)
   const [submitted, setSubmitted] = useState(false)
   const [step, setStep] = useState(1)
@@ -41,6 +44,25 @@ function PrequalificationView() {
   const [captchaAnswer, setCaptchaAnswer] = useState('')
   const [captchaError, setCaptchaError] = useState('')
   const isFinalStep = !(step === 1 && form.financing)
+
+  useEffect(() => {
+    let active = true
+
+    getVehicles()
+      .then((data) => {
+        if (active) setVehicles(data.filter((vehicle) => vehicle.disponible !== false))
+      })
+      .catch(() => {
+        if (active) setVehiclesError('No pudimos cargar el stock. Intentá nuevamente más tarde.')
+      })
+      .finally(() => {
+        if (active) setVehiclesLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   function refreshCaptcha() {
     setChallenge(createChallenge())
@@ -122,7 +144,7 @@ function PrequalificationView() {
               <ContactFields form={form} errors={errors} onChange={updateField} onBlur={validateField} />
 
               <div className="section-gap"><SectionHeading number="02" title="Tu próximo vehículo" description="Elegí una opción de nuestro stock disponible." /></div>
-              <VehicleSelection vehicles={vehicles} selectedId={form.vehicle} downPayment={form.downPayment} financing={form.financing} onChange={updateField} />
+              <VehicleSelection vehicles={vehicles} loading={vehiclesLoading} error={vehiclesError} selectedId={form.vehicle} downPayment={form.downPayment} financing={form.financing} onChange={updateField} />
 
               <div className="section-gap"><SectionHeading number="03" title="Tu vehículo en parte de pago" description="Contanos si tenés una unidad para entregar." /></div>
               <TradeInOptions value={form.tradeIn} onChange={updateField} />

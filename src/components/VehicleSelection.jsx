@@ -26,11 +26,11 @@ function roundedBounds(values, step) {
   }
 }
 
-function VehicleSelection({ vehicles, selectedId, downPayment, financing, onChange }) {
+function VehicleSelection({ vehicles, loading, error, selectedId, downPayment, financing, onChange }) {
   const [filters, setFilters] = useState(noFilters)
 
-  const priceBounds = useMemo(() => roundedBounds(vehicles.map((v) => v.price), PRICE_STEP), [vehicles])
-  const kmBounds = useMemo(() => roundedBounds(vehicles.map((v) => v.km), KM_STEP), [vehicles])
+  const priceBounds = useMemo(() => vehicles.length ? roundedBounds(vehicles.map((v) => v.price), PRICE_STEP) : { min: 0, max: 0 }, [vehicles])
+  const kmBounds = useMemo(() => vehicles.length ? roundedBounds(vehicles.map((v) => v.km), KM_STEP) : { min: 0, max: 0 }, [vehicles])
 
   const hasFilters = Object.values(filters).some((value) => value !== '' && value !== null)
   // La unidad ya elegida siempre se muestra, aunque los filtros la excluyan.
@@ -42,17 +42,22 @@ function VehicleSelection({ vehicles, selectedId, downPayment, financing, onChan
 
   return (
     <>
-      <VehicleFilters vehicles={vehicles} filters={filters} priceBounds={priceBounds} kmBounds={kmBounds} onChange={updateFilter} />
-      <div className="vehicle-list-head">
-        {hasFilters && <button type="button" onClick={() => setFilters(noFilters)}>Limpiar filtros</button>}
-        <span aria-live="polite">{visible.length} {visible.length === 1 ? 'vehículo' : 'vehículos'}</span>
-      </div>
-      <div className="vehicle-list">
-        {visible.map((vehicle) => (
-          <VehicleOption key={vehicle.id} vehicle={vehicle} selected={selectedId === vehicle.id} onChange={onChange} />
-        ))}
-        {visible.length === 0 && <p className="vehicle-empty">No hay vehículos que coincidan con los filtros.</p>}
-      </div>
+      {loading && <p className="vehicle-empty" role="status">Cargando vehículos disponibles...</p>}
+      {!loading && error && <p className="vehicle-empty" role="alert">{error}</p>}
+      {!loading && !error && !vehicles.length && <p className="vehicle-empty" role="status">No hay vehículos disponibles en este momento.</p>}
+      {!loading && !error && vehicles.length > 0 && <>
+        <VehicleFilters vehicles={vehicles} filters={filters} priceBounds={priceBounds} kmBounds={kmBounds} onChange={updateFilter} />
+        <div className="vehicle-list-head">
+          {hasFilters && <button type="button" onClick={() => setFilters(noFilters)}>Limpiar filtros</button>}
+          <span aria-live="polite">{visible.length} {visible.length === 1 ? 'vehículo' : 'vehículos'}</span>
+        </div>
+        <div className="vehicle-list">
+          {visible.map((vehicle) => (
+            <VehicleOption key={vehicle.id} vehicle={vehicle} selected={selectedId === vehicle.id} onChange={onChange} />
+          ))}
+          {visible.length === 0 && <p className="vehicle-empty">No hay vehículos que coincidan con los filtros.</p>}
+        </div>
+      </>}
       <div className="field-row finance-row">
         <FormField label="Anticipo en efectivo" optional>
           <input name="downPayment" value={downPayment} onChange={onChange} inputMode="numeric" placeholder="$ 0" />
