@@ -192,3 +192,25 @@ select {
 @media (max-width: 560px) {
 	.consent-field .consent { padding-top: 0; }
 }
+
+/* Lista de vehículos en tarjetas: 3 por fila, foto grande arriba y datos debajo. Mismo desplegable con scroll. */
+.vehicle-list { --row: 300px; grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: calc(2 * var(--row) + 9px); }
+.vehicle-option { flex-direction: column; align-items: stretch; gap: 12px; padding: 0 0 14px; min-height: 0; }
+.vehicle-option .vehicle-thumb { width: 100%; min-width: 0; height: 170px; padding-left: 16px; }
+.vehicle-option .vehicle-thumb b { font-size: 28px; }
+.vehicle-option .vehicle-copy { flex: 0 0 auto; padding: 0 14px; }
+.vehicle-option .vehicle-price { display: grid; text-align: left; padding: 0 14px; font-size: 17px; }
+.vehicle-option .radio-dot { position: absolute; top: 10px; right: 10px; margin: 0; background: #fff; }
+@media (max-width: 900px) {
+	.vehicle-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+	.vehicle-list { --row: 290px; grid-template-columns: minmax(0, 1fr); }
+	.vehicle-option { gap: 12px; padding: 0 0 14px; min-height: 0; }
+	.vehicle-option .vehicle-thumb { width: 100%; min-width: 0; height: 160px; }
+	.vehicle-option .vehicle-price { display: grid; }
+	.vehicle-option .vehicle-copy strong { font-size: 16px; }
+	.vehicle-option .vehicle-copy small { font-size: 13px; }
+}
+.vehicle-option .vehicle-thumb.has-photo { padding: 0; }
+.vehicle-option .vehicle-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
