@@ -89,6 +89,11 @@ export function obtenerLead(id) {
   return leadsClient.get(`/leads/${encodeURIComponent(id)}`).then(({ data }) => data)
 }
 
+// GET /clientes/{id} -> datos del cliente (nombre, apellido, teléfono).
+export function obtenerCliente(id) {
+  return clientesClient.get(`/clientes/${encodeURIComponent(id)}`).then(({ data }) => data)
+}
+
 // PATCH /leads/{id}/state?nuevo_estado=... -> transición de estado.
 export function cambiarEstado(id, nuevoEstado) {
   return leadsClient

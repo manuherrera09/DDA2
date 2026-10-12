@@ -1,44 +1,170 @@
-import { useMemo, useState } from 'react'
-import { vehicles } from '../data/vehicles'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { LEAD_LEVELS } from '../utils/constants'
+import {
+  cambiarEstado,
+  obtenerCalificacion,
+  obtenerCliente,
+  obtenerCola,
+  obtenerHistorial,
+} from '../api/leadsClient'
+import { getVehicleById } from '../api/vehiclesClient'
 
-const initialLeads = [
-  { id: 'DDA-482913', name: 'Martina López', phone: '11 5555 5555', vehicle: vehicles[0], level: 'Muy potable', score: 92, date: '02/10/2026 09:42', status: 'CALIFICADO', complete: true, reasons: ['Anticipo alto', 'Solicita financiación', 'Zona con cobertura'], history: [{ type: 'Automática', score: 92, level: 'Muy potable', date: '02/10/2026 09:43' }] },
-  { id: 'DDA-481762', name: 'Nicolás Ferreyra', phone: '351 444 8822', vehicle: vehicles[1], level: 'Potable', score: 76, date: '02/10/2026 08:17', status: 'CALIFICADO', complete: true, reasons: ['Permuta declarada', 'Anticipo medio'], history: [{ type: 'Automática', score: 76, level: 'Potable', date: '02/10/2026 08:18' }] },
-  { id: 'DDA-479304', name: 'Camila Suárez', phone: '342 612 9001', vehicle: vehicles[2], level: 'No potable', score: 38, date: '01/10/2026 16:06', status: 'CALIFICADO', complete: false, reasons: ['Sin anticipo declarado', 'Datos de contacto incompletos'], history: [{ type: 'Automática', score: 38, level: 'No potable', date: '01/10/2026 16:07' }] },
-]
+const NIVELES = {
+  SIN_CALIFICACION: 'Sin calificación',
+  NO_POTABLE: 'No potable',
+  POTABLE: 'Potable',
+  MUY_POTABLE: 'Muy potable',
+}
 
-const levels = ['Todos', 'No potable', 'Potable', 'Muy potable']
+const ESTADOS = {
+  PENDIENTE: 'PENDIENTE',
+  CALIFICADO: 'CALIFICADO',
+  EN_GESTION: 'EN_GESTION',
+  DERIVADO: 'DERIVADO',
+  DESCARTADO: 'DESCARTADO',
+}
+
+const levels = ['Todos', ...Object.values(LEAD_LEVELS)]
+
+function nivelLegible(nivel) {
+  return NIVELES[nivel] || nivel || 'Sin calificación'
+}
+
+function nivelKey(nivel) {
+  return nivelLegible(nivel).replace(' ', '-').toLowerCase()
+}
+
+function toDateOnly(iso) {
+  if (!iso) return '-'
+  return new Date(iso).toLocaleDateString('es-AR')
+}
+
+function formatPuntaje(puntaje) {
+  if (puntaje == null) return '-'
+  return String(puntaje)
+}
+
+function formatState(estado) {
+  return estado ? estado.replace(/_/g, ' ') : ''
+}
 
 function ColaTelemarketerPage() {
-  const [leads, setLeads] = useState(initialLeads)
+  const [leads, setLeads] = useState([])
+  const [vehicles, setVehicles] = useState({})
   const [filter, setFilter] = useState('Todos')
   const [selectedId, setSelectedId] = useState(null)
+  const [detail, setDetail] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState('')
-  const visibleLeads = useMemo(() => leads.filter((lead) => filter === 'Todos' || lead.level === filter), [filter, leads])
+
+  const loadCola = useCallback(async () => {
+    setLoading(true)
+    try {
+      // El endpoint exige estado y nivel; se consulta cada nivel calificado y se
+      // unifica para poder filtrar en memoria como antes.
+      const niveles = ['NO_POTABLE', 'POTABLE', 'MUY_POTABLE']
+      const resultados = await Promise.all(
+        niveles.map((nivel) => obtenerCola({ estado: ESTADOS.CALIFICADO, nivel })),
+      )
+      setLeads(resultados.flat().filter(Boolean))
+    } catch (err) {
+      setFeedback(err?.response?.data?.detail || 'No se pudo cargar la cola de leads.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadCola()
+  }, [loadCola])
+
+  // Los leads traen clienteId y vehiculoId; se resuelven por separado para
+  // mostrar nombre, teléfono y vehículo sin duplicar datos en el lead.
+  useEffect(() => {
+    let cancelado = false
+    const vehiculosUnicos = [...new Set(leads.map((l) => l.vehiculoId).filter(Boolean))]
+    vehiculosUnicos.forEach((id) => {
+      if (!vehicles[id]) {
+        getVehicleById(id)
+          .then((v) => {
+            if (!cancelado) setVehicles((actual) => ({ ...actual, [id]: v }))
+          })
+          .catch(() => {})
+      }
+    })
+    return () => {
+      cancelado = true
+    }
+  }, [leads, vehicles])
+
+  const visibleLeads = useMemo(
+    () => leads.filter((lead) => filter === 'Todos' || nivelLegible(lead.nivel) === filter),
+    [filter, leads],
+  )
+
   const selectedLead = leads.find((lead) => lead.id === selectedId)
 
-  function updateLead(updater, message) {
-    setLeads((current) => current.map((lead) => lead.id === selectedId ? updater(lead) : lead))
-    setFeedback(message)
+  async function loadDetail(id) {
+    setFeedback('')
+    setDetail(null)
+    if (!id) return
+    const lead = leads.find((l) => l.id === id)
+    try {
+      const [calificacion, cliente] = await Promise.all([
+        obtenerCalificacion(id),
+        lead?.clienteId ? obtenerCliente(lead.clienteId) : Promise.resolve(null),
+      ])
+      const historial = cliente?.id ? await obtenerHistorial(cliente.id).catch(() => null) : null
+      setDetail({
+        calificacion,
+        cliente,
+        historial: historial?.calificaciones || null,
+      })
+    } catch (err) {
+      setFeedback(err?.response?.data?.detail || 'No se pudo cargar la ficha del lead.')
+    }
   }
 
-  function takeLead() { updateLead((lead) => ({ ...lead, status: 'EN GESTION' }), 'El lead pasó a EN GESTION.') }
-  function discardLead() { updateLead((lead) => ({ ...lead, status: 'DESCARTADO' }), 'El lead fue descartado.') }
-  function referLead() {
-    if (!selectedLead.complete) { setFeedback('No se puede derivar: la ficha está incompleta.'); return }
-    updateLead((lead) => ({ ...lead, status: 'DERIVADO' }), 'El lead fue derivado al vendedor.')
+  function selectLead(id) {
+    setSelectedId(id)
+    loadDetail(id)
   }
-  function correctLead() {
-    const reason = window.prompt('Motivo obligatorio de la corrección')
-    if (!reason?.trim()) { setFeedback('La corrección requiere un motivo.'); return }
-    updateLead((lead) => ({ ...lead, level: lead.level === 'Muy potable' ? 'Potable' : 'Muy potable', history: [...lead.history, { type: 'Manual', score: lead.score, level: lead.level === 'Muy potable' ? 'Potable' : 'Muy potable', date: '02/10/2026 10:04', reason }] }), 'La calificación manual fue guardada.')
+
+  async function cambiarEstadoSeleccionado(nuevoEstado, mensaje) {
+    if (!selectedLead) return
+    try {
+      await cambiarEstado(selectedLead.id, nuevoEstado)
+      setFeedback(mensaje)
+      await loadCola()
+    } catch (err) {
+      setFeedback(err?.response?.data?.detail || 'No se pudo actualizar el estado del lead.')
+    }
+  }
+
+  function takeLead() {
+    cambiarEstadoSeleccionado(ESTADOS.EN_GESTION, 'El lead pasó a EN GESTION.')
+  }
+  function discardLead() {
+    cambiarEstadoSeleccionado(ESTADOS.DESCARTADO, 'El lead fue descartado.')
+  }
+  function referLead() {
+    if (selectedLead && !selectedLead.fichaCompleta) {
+      setFeedback('No se puede derivar: la ficha está incompleta.')
+      return
+    }
+    cambiarEstadoSeleccionado(ESTADOS.DERIVADO, 'El lead fue derivado al vendedor.')
+  }
+
+  function clienteNombre(cliente) {
+    if (!cliente) return '-'
+    return [cliente.nombre, cliente.apellido].filter(Boolean).join(' ')
   }
 
   return <main className="queue-shell">
     <header className="queue-header"><div><div className="eyebrow">Operaciones comerciales</div><h1>Cola de leads</h1><p>Priorizá los contactos calificados y asigná el próximo paso.</p></div><a className="queue-link" href="/preformulario">Ver preformulario <span>↗</span></a></header>
-    <div className="queue-toolbar"><div className="queue-count"><strong>{visibleLeads.length}</strong> leads en cola</div><div className="filter-group" role="group" aria-label="Filtrar por nivel">{levels.map((level) => <button key={level} className={filter === level ? 'filter-active' : ''} onClick={() => setFilter(level)}>{level}</button>)}</div></div>
-    <div className="queue-layout"><section className="lead-table" aria-label="Leads calificados"><div className="lead-table-head"><span>Lead</span><span>Vehículo</span><span>Nivel / puntaje</span><span>Ingreso</span></div>{visibleLeads.map((lead) => <button className={`lead-row ${selectedId === lead.id ? 'lead-selected' : ''}`} key={lead.id} onClick={() => { setSelectedId(lead.id); setFeedback('') }}><span><strong>{lead.name}</strong><small>{lead.phone} · {lead.id}</small></span><span><b>{lead.vehicle.name}</b><small>{lead.vehicle.detail}</small></span><span><b className={`level level-${lead.level.replace(' ', '-').toLowerCase()}`}>{lead.level}</b><small>{lead.score} / 100</small></span><span><b>{lead.date.split(' ')[0]}</b><small>{lead.status}</small></span></button>)}</section>
-      {selectedLead ? <aside className="lead-detail"><div className="detail-top"><div><span className="summary-label">Ficha del lead</span><h2>{selectedLead.name}</h2><p>{selectedLead.id} · {selectedLead.phone}</p></div><button className="close-detail" onClick={() => setSelectedId(null)} aria-label="Cerrar detalle">×</button></div><div className="score-panel"><span className={`level level-${selectedLead.level.replace(' ', '-').toLowerCase()}`}>{selectedLead.level}</span><strong>{selectedLead.score}<small>/100</small></strong><span className="status-pill">{selectedLead.status}</span></div><dl className="lead-facts"><div><dt>Vehículo de interés</dt><dd>{selectedLead.vehicle.name}<small>{selectedLead.vehicle.detail}</small></dd></div><div><dt>Motivos</dt><dd>{selectedLead.reasons.map((reason) => <span className="reason" key={reason}>{reason}</span>)}</dd></div></dl><div className="detail-actions"><button onClick={takeLead}>Tomar lead</button><button onClick={referLead}>Derivar al vendedor</button><button className="outline-action" onClick={correctLead}>Corregir nivel</button><button className="danger-action" onClick={discardLead}>Descartar</button></div>{feedback && <p className="action-feedback">{feedback}</p>}<div className="history"><h3>Historial de calificaciones</h3>{selectedLead.history.map((item, index) => <div className="history-row" key={`${item.date}-${index}`}><span>{item.type}</span><b>{item.level} · {item.score}</b><small>{item.date}{item.reason && ` · ${item.reason}`}</small></div>)}</div></aside> : <aside className="empty-detail"><span>←</span><strong>Seleccioná un lead</strong><p>Acá vas a ver la ficha, la calificación y las acciones disponibles.</p></aside>}</div>
+    <div className="queue-toolbar"><div className="queue-count"><strong>{loading ? '…' : visibleLeads.length}</strong> leads en cola</div><div className="filter-group" role="group" aria-label="Filtrar por nivel">{levels.map((level) => <button key={level} className={filter === level ? 'filter-active' : ''} onClick={() => setFilter(level)}>{level}</button>)}</div></div>
+    <div className="queue-layout"><section className="lead-table" aria-label="Leads calificados"><div className="lead-table-head"><span>Lead</span><span>Vehículo</span><span>Nivel / puntaje</span><span>Ingreso</span></div>{visibleLeads.map((lead) => { const vehiculo = vehicles[lead.vehiculoId]; return <button className={`lead-row ${selectedId === lead.id ? 'lead-selected' : ''}`} key={lead.id} onClick={() => selectLead(lead.id)}><span><strong>{detail?.cliente && lead.clienteId === detail.cliente.id ? clienteNombre(detail.cliente) : '-'}</strong><small>{detail?.cliente && lead.clienteId === detail.cliente.id ? (detail.cliente.telefono || '-') : '-'} · {lead.id}</small></span><span><b>{vehiculo?.name || '-'}</b><small>{vehiculo?.detail || ''}</small></span><span><b className={`level level-${nivelKey(lead.nivel)}`}>{nivelLegible(lead.nivel)}</b><small>{formatPuntaje(lead.puntaje)} / 100</small></span><span><b>{toDateOnly(lead.creadoEn)}</b><small>{formatState(lead.estado)}</small></span></button>})}</section>
+      {selectedLead ? <aside className="lead-detail"><div className="detail-top"><div><span className="summary-label">Ficha del lead</span><h2>{clienteNombre(detail?.cliente)}</h2><p>{selectedLead.id} · {detail?.cliente?.telefono || '-'}</p></div><button className="close-detail" onClick={() => setSelectedId(null)} aria-label="Cerrar detalle">×</button></div><div className="score-panel"><span className={`level level-${nivelKey(detail?.calificacion?.nivel || selectedLead.nivel)}`}>{nivelLegible(detail?.calificacion?.nivel || selectedLead.nivel)}</span><strong>{formatPuntaje(detail?.calificacion?.puntos ?? selectedLead.puntaje)}<small>/100</small></strong><span className="status-pill">{formatState(selectedLead.estado)}</span></div><dl className="lead-facts"><div><dt>Vehículo de interés</dt><dd>{vehicles[selectedLead.vehiculoId]?.name || '-'}<small>{vehicles[selectedLead.vehiculoId]?.detail || ''}</small></dd></div><div><dt>Motivos</dt><dd>{(detail?.calificacion?.motivos || []).map((motivo) => <span className="reason" key={motivo.id}>{motivo.descripcion}</span>)}</dd></div></dl><div className="detail-actions"><button onClick={takeLead}>Tomar lead</button><button onClick={referLead}>Derivar al vendedor</button><button className="outline-action" onClick={() => {}}>Corregir nivel</button><button className="danger-action" onClick={discardLead}>Descartar</button></div>{feedback && <p className="action-feedback">{feedback}</p>}<div className="history"><h3>Historial de calificaciones</h3>{(detail?.historial || []).map((item, index) => <div className="history-row" key={`${item.calculadaEn}-${index}`}><span>{item.origen === 'MANUAL' ? 'Manual' : 'Automática'}</span><b>{nivelLegible(item.nivel)} · {item.puntaje}</b><small>{item.calculadaEn ? new Date(item.calculadaEn).toLocaleString('es-AR') : '-'}{item.observacion && ` · ${item.observacion}`}</small></div>)}</div></aside> : <aside className="empty-detail"><span>←</span><strong>Seleccioná un lead</strong><p>Acá vas a ver la ficha, la calificación y las acciones disponibles.</p></aside>}</div>
   </main>
 }
 
