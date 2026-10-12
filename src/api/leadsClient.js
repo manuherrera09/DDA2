@@ -79,14 +79,36 @@ export function crearLead(preformulario) {
   return leadsClient.post('/leads', preformulario).then(({ data }) => data)
 }
 
+// El DTO de leads (LeadDetalleDTO) serializa en snake_case. Se normaliza a
+// camelCase para que el resto del front consuma un único formato.
+export function normalizeLead(lead) {
+  if (!lead) return lead
+  return {
+    ...lead,
+    clienteId: lead.clienteId ?? lead.cliente_id,
+    vehiculoId: lead.vehiculoId ?? lead.vehiculo_id,
+    solicitaFinanciacion: lead.solicitaFinanciacion ?? lead.solicita_financiacion,
+    fichaCompleta: lead.fichaCompleta ?? lead.ficha_completa,
+    permutaTiene: lead.permutaTiene ?? lead.permuta_tiene,
+    permutaDescripcion: lead.permutaDescripcion ?? lead.permuta_descripcion,
+    permutaValorDeclarado: lead.permutaValorDeclarado ?? lead.permuta_valor_declarado,
+    permutaComputable: lead.permutaComputable ?? lead.permuta_computable,
+    creadoEn: lead.creadoEn ?? lead.creado_en,
+  }
+}
+
 // GET /leads?estado=CALIFICADO&nivel=... -> cola del telemarketer.
 export function obtenerCola({ estado, nivel } = {}) {
-  return leadsClient.get('/leads', { params: { estado, nivel } }).then(({ data }) => data)
+  return leadsClient
+    .get('/leads', { params: { estado, nivel } })
+    .then(({ data }) => (Array.isArray(data) ? data.map(normalizeLead) : data))
 }
 
 // GET /leads/{id} -> ficha del lead.
 export function obtenerLead(id) {
-  return leadsClient.get(`/leads/${encodeURIComponent(id)}`).then(({ data }) => data)
+  return leadsClient
+    .get(`/leads/${encodeURIComponent(id)}`)
+    .then(({ data }) => normalizeLead(data))
 }
 
 // GET /clientes/{id} -> datos del cliente (nombre, apellido, teléfono).
