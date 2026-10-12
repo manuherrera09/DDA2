@@ -62,13 +62,11 @@ function ColaTelemarketerPage() {
   const loadCola = useCallback(async () => {
     setLoading(true)
     try {
-      // El endpoint exige estado y nivel; se consulta cada nivel calificado y se
-      // unifica para poder filtrar en memoria como antes.
-      const niveles = ['NO_POTABLE', 'POTABLE', 'MUY_POTABLE']
-      const resultados = await Promise.all(
-        niveles.map((nivel) => obtenerCola({ estado: ESTADOS.CALIFICADO, nivel })),
-      )
-      setLeads(resultados.flat().filter(Boolean))
+      // GET /leads sin filtros devuelve toda la cola ya ordenada por el
+      // servidor (potabilidad, puntaje y antigüedad). El front filtra en
+      // memoria por nivel como antes.
+      const data = await obtenerCola()
+      setLeads(Array.isArray(data) ? data : [])
     } catch (err) {
       setFeedback(err?.response?.data?.detail || 'No se pudo cargar la cola de leads.')
     } finally {
