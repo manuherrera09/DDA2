@@ -217,3 +217,12 @@ select {
 .vehicle-error { margin: 8px 0 0 45px; }
 .vehicle-error.field-invalid ~ .vehicle-list, .vehicle-list:has(+ .vehicle-error.field-invalid) { outline: 1px solid #b3402a; outline-offset: 4px; }
 @media (max-width: 560px) { .vehicle-error { margin-left: 0; } }
+
+/* Estado vacío de la lista de vehículos */
+.vehicle-empty-state { margin: 27px 0 0 45px; padding: 36px 24px; border: 1px dashed #b4b5af; background: rgba(255,255,255,.35); display: grid; justify-items: center; gap: 8px; text-align: center; color: #5f6362; }
+.vehicle-empty-state svg { color: #9a9c95; margin-bottom: 4px; }
+.vehicle-empty-state strong { font-size: 18px; color: var(--ink); }
+.vehicle-empty-state p { margin: 0; max-width: 380px; font-size: 14px; }
+.vehicle-empty-state button { margin-top: 10px; padding: 10px 22px; border: 1px solid var(--orange); background: transparent; color: var(--orange-strong); font: inherit; font-weight: 600; cursor: pointer; transition: background .2s, color .2s; }
+.vehicle-empty-state button:hover { background: var(--orange); color: #fff; }
+@media (max-width: 560px) { .vehicle-empty-state { margin-left: 0; } }

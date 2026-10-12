@@ -3,6 +3,7 @@ import { normalizeText } from '../utils/text'
 import FieldError from './FieldError'
 import FormField from './FormField'
 import VehicleFilters from './VehicleFilters'
+import VehicleEmptyState from './VehicleEmptyState'
 import VehicleOption from './VehicleOption'
 
 const noFilters = { brand: '', model: '', transmission: '', year: '', priceMin: null, priceMax: null, kmMin: null, kmMax: null }
@@ -27,7 +28,7 @@ function roundedBounds(values, step) {
   }
 }
 
-function VehicleSelection({ vehicles, loading, error, selectedId, selectionError, downPayment, financing, onChange }) {
+function VehicleSelection({ vehicles, loading, error, selectedId, selectionError, onRetry, downPayment, financing, onChange }) {
   const [filters, setFilters] = useState(noFilters)
 
   const priceBounds = useMemo(() => vehicles.length ? roundedBounds(vehicles.map((v) => v.price), PRICE_STEP) : { min: 0, max: 0 }, [vehicles])
@@ -44,8 +45,8 @@ function VehicleSelection({ vehicles, loading, error, selectedId, selectionError
   return (
     <>
       {loading && <p className="vehicle-empty" role="status">Cargando vehículos disponibles...</p>}
-      {!loading && error && <p className="vehicle-empty" role="alert">{error}</p>}
-      {!loading && !error && !vehicles.length && <p className="vehicle-empty" role="status">No hay vehículos disponibles en este momento.</p>}
+      {!loading && error && <VehicleEmptyState title="No pudimos cargar los vehículos" message={error} onRetry={onRetry} />}
+      {!loading && !error && !vehicles.length && <VehicleEmptyState title="Sin vehículos por ahora" message="No hay vehículos disponibles en este momento. Probá de nuevo en unos minutos." onRetry={onRetry} />}
       {!loading && !error && vehicles.length > 0 && <>
         <VehicleFilters vehicles={vehicles} filters={filters} priceBounds={priceBounds} kmBounds={kmBounds} onChange={updateFilter} />
         <div className="vehicle-list-head">
