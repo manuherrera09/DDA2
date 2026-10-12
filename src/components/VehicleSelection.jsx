@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { normalizeText } from '../utils/text'
+import FieldError from './FieldError'
 import FormField from './FormField'
 import VehicleFilters from './VehicleFilters'
+import VehicleEmptyState from './VehicleEmptyState'
 import VehicleOption from './VehicleOption'
 
 const noFilters = { brand: '', model: '', transmission: '', year: '', priceMin: null, priceMax: null, kmMin: null, kmMax: null }
@@ -26,7 +28,7 @@ function roundedBounds(values, step) {
   }
 }
 
-function VehicleSelection({ vehicles, loading, error, selectedId, downPayment, financing, onChange }) {
+function VehicleSelection({ vehicles, loading, error, selectedId, selectionError, onRetry, downPayment, financing, onChange }) {
   const [filters, setFilters] = useState(noFilters)
 
   const priceBounds = useMemo(() => vehicles.length ? roundedBounds(vehicles.map((v) => v.price), PRICE_STEP) : { min: 0, max: 0 }, [vehicles])
@@ -42,9 +44,21 @@ function VehicleSelection({ vehicles, loading, error, selectedId, downPayment, f
 
   return (
     <>
-      {loading && <p className="vehicle-empty" role="status">Cargando vehículos disponibles...</p>}
-      {!loading && error && <p className="vehicle-empty" role="alert">{error}</p>}
-      {!loading && !error && !vehicles.length && <p className="vehicle-empty" role="status">No hay vehículos disponibles en este momento.</p>}
+      {loading && (
+        <div className="vehicle-list vehicle-skeletons" role="status" aria-busy="true">
+          <span className="sr-only">Cargando vehículos disponibles...</span>
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="vehicle-option vehicle-skeleton" aria-hidden="true">
+              <span className="vehicle-thumb" />
+              <span className="skeleton-line skeleton-title" />
+              <span className="skeleton-line" />
+              <span className="skeleton-line skeleton-price" />
+            </div>
+          ))}
+        </div>
+      )}
+      {!loading && error && <VehicleEmptyState title="No pudimos cargar los vehículos" message={error} onRetry={onRetry} />}
+      {!loading && !error && !vehicles.length && <VehicleEmptyState title="Sin vehículos por ahora" message="No hay vehículos disponibles en este momento. Probá de nuevo en unos minutos." onRetry={onRetry} />}
       {!loading && !error && vehicles.length > 0 && <>
         <VehicleFilters vehicles={vehicles} filters={filters} priceBounds={priceBounds} kmBounds={kmBounds} onChange={updateFilter} />
         <div className="vehicle-list-head">
@@ -57,6 +71,7 @@ function VehicleSelection({ vehicles, loading, error, selectedId, downPayment, f
           ))}
           {visible.length === 0 && <p className="vehicle-empty">No hay vehículos que coincidan con los filtros.</p>}
         </div>
+        <div className={`vehicle-error ${selectionError ? 'field-invalid' : ''}`}><FieldError message={selectionError} /></div>
       </>}
       <div className="field-row finance-row">
         <FormField label="Anticipo en efectivo" optional>

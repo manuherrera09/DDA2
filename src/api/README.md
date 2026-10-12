@@ -6,7 +6,7 @@ Para cambiar la URL, crear un archivo `.env` basado en `.env.example`:
 
 ```env
 VITE_API_URL=http://localhost:8080/api
-VITE_VEHICULOS_API_URL=https://vehiculosmicroservice.onrender.com
+VITE_VEHICULOS_API_URL=https://vehiculos.example.com
 ```
 
 El cliente específico de vehículos está en `vehiclesClient.js` y expone:

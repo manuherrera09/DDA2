@@ -36,6 +36,7 @@ function PrequalificationView() {
   const [vehicles, setVehicles] = useState([])
   const [vehiclesLoading, setVehiclesLoading] = useState(true)
   const [vehiclesError, setVehiclesError] = useState('')
+  const [vehiclesReload, setVehiclesReload] = useState(0)
   const [form, setForm] = useState(initialForm)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -50,6 +51,8 @@ function PrequalificationView() {
 
   useEffect(() => {
     let active = true
+    setVehiclesLoading(true)
+    setVehiclesError('')
 
     getVehicles()
       .then((data) => {
@@ -65,7 +68,7 @@ function PrequalificationView() {
     return () => {
       active = false
     }
-  }, [])
+  }, [vehiclesReload])
 
   function refreshCaptcha() {
     setChallenge(createChallenge())
@@ -91,7 +94,9 @@ function PrequalificationView() {
     const found = validateForm(form, step)
     setErrors(found)
     if (Object.keys(found).length) {
-      document.querySelector('.field-invalid input')?.focus()
+      const firstInvalid = document.querySelector('.field-invalid input')
+      if (firstInvalid && !firstInvalid.closest('.vehicle-error')) firstInvalid.focus()
+      else document.querySelector('.vehicle-error.field-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
     if (form.financing && step === 1) {
@@ -158,7 +163,7 @@ function PrequalificationView() {
               <ContactFields form={form} errors={errors} onChange={updateField} onBlur={validateField} />
 
               <div className="section-gap"><SectionHeading number="02" title="Tu próximo vehículo" description="Elegí una opción de nuestro stock disponible." /></div>
-              <VehicleSelection vehicles={vehicles} loading={vehiclesLoading} error={vehiclesError} selectedId={form.vehicle} downPayment={form.downPayment} financing={form.financing} onChange={updateField} />
+              <VehicleSelection vehicles={vehicles} loading={vehiclesLoading} error={vehiclesError} selectedId={form.vehicle} selectionError={errors.vehicle} onRetry={() => setVehiclesReload((count) => count + 1)} downPayment={form.downPayment} financing={form.financing} onChange={updateField} />
 
               <div className="section-gap"><SectionHeading number="03" title="Tu vehículo en parte de pago" description="Contanos si tenés una unidad para entregar." /></div>
               <TradeInOptions value={form.tradeIn} onChange={updateField} />
