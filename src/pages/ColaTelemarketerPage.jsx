@@ -25,7 +25,20 @@ const ESTADOS = {
   DESCARTADO: 'DESCARTADO',
 }
 
+const ESTADOS_LEGIBLES = {
+  PENDIENTE: 'Pendiente',
+  CALIFICADO: 'Calificado',
+  EN_GESTION: 'En gestión',
+  DERIVADO: 'Derivado',
+  DESCARTADO: 'Descartado',
+}
+
 const levels = ['Todos', ...Object.values(LEAD_LEVELS)]
+const states = ['Todos', ...Object.values(ESTADOS)]
+
+function estadoLegible(estado) {
+  return ESTADOS_LEGIBLES[estado] || formatState(estado) || 'Sin estado'
+}
 
 function nivelLegible(nivel) {
   return NIVELES[nivel] || nivel || 'Sin calificación'
@@ -54,6 +67,7 @@ function ColaTelemarketerPage() {
   const [vehicles, setVehicles] = useState({})
   const [clientes, setClientes] = useState({})
   const [filter, setFilter] = useState('Todos')
+  const [estadoFilter, setEstadoFilter] = useState('Todos')
   const [selectedId, setSelectedId] = useState(null)
   const [detail, setDetail] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -108,8 +122,12 @@ function ColaTelemarketerPage() {
   }, [leads, vehicles, clientes])
 
   const visibleLeads = useMemo(
-    () => leads.filter((lead) => filter === 'Todos' || nivelLegible(lead.nivel) === filter),
-    [filter, leads],
+    () => leads.filter((lead) => {
+      const porNivel = filter === 'Todos' || nivelLegible(lead.nivel) === filter
+      const porEstado = estadoFilter === 'Todos' || lead.estado === estadoFilter
+      return porNivel && porEstado
+    }),
+    [filter, estadoFilter, leads],
   )
 
   const selectedLead = leads.find((lead) => lead.id === selectedId)
@@ -196,7 +214,7 @@ function ColaTelemarketerPage() {
 
   return <main className="queue-shell">
     <header className="queue-header"><div><div className="eyebrow">Operaciones comerciales</div><h1>Cola de leads</h1><p>Priorizá los contactos calificados y asigná el próximo paso.</p></div><a className="queue-link" href="/preformulario">Ver preformulario <span>↗</span></a></header>
-    <div className="queue-toolbar"><div className="queue-count"><strong>{loading ? '…' : visibleLeads.length}</strong> leads en cola</div><div className="filter-group" role="group" aria-label="Filtrar por nivel">{levels.map((level) => <button key={level} className={filter === level ? 'filter-active' : ''} onClick={() => setFilter(level)}>{level}</button>)}</div></div>
+    <div className="queue-toolbar"><div className="queue-count"><strong>{loading ? '…' : visibleLeads.length}</strong> leads en cola</div><div className="filter-group" role="group" aria-label="Filtrar por nivel">{levels.map((level) => <button key={level} className={filter === level ? 'filter-active' : ''} onClick={() => setFilter(level)}>{level}</button>)}</div><div className="filter-group" role="group" aria-label="Filtrar por estado">{states.map((estado) => <button key={estado} className={estadoFilter === estado ? 'filter-active' : ''} onClick={() => setEstadoFilter(estado)}>{estado === 'Todos' ? 'Todos' : estadoLegible(estado)}</button>)}</div></div>
     <div className="queue-layout"><section className="lead-table" aria-label="Leads calificados"><div className="lead-table-head"><span>Lead</span><span>Vehículo</span><span>Nivel / puntaje</span><span>Ingreso</span></div>{visibleLeads.map((lead) => { const vehiculo = vehicles[lead.vehiculoId]; const cliente = clientes[lead.clienteId]; return <button className={`lead-row ${selectedId === lead.id ? 'lead-selected' : ''}`} key={lead.id} onClick={() => selectLead(lead.id)}><span><strong>{clienteNombre(cliente)}</strong><small>{cliente?.telefono || '-'} · {lead.id}</small></span><span><b>{vehiculo?.name || '-'}</b><small>{vehiculo?.detail || ''}</small></span><span><b className={`level level-${nivelKey(lead.nivel)}`}>{nivelLegible(lead.nivel)}</b><small>{formatPuntaje(lead.puntaje)} / 100</small></span><span><b>{toDateOnly(lead.creadoEn)}</b><small>{formatState(lead.estado)}</small></span></button>})}</section>
       {selectedLead ? <aside className="lead-detail"><div className="detail-top"><div><span className="summary-label">Ficha del lead</span><h2>{clienteNombre(detail?.cliente)}</h2><p>{selectedLead.id} · {detail?.cliente?.telefono || '-'}</p></div><button className="close-detail" onClick={() => setSelectedId(null)} aria-label="Cerrar detalle">×</button></div><div className="score-panel"><span className={`level level-${nivelKey(detail?.calificacion?.nivel || selectedLead.nivel)}`}>{nivelLegible(detail?.calificacion?.nivel || selectedLead.nivel)}</span><strong>{formatPuntaje(detail?.calificacion?.puntos ?? selectedLead.puntaje)}<small>/100</small></strong><span className="status-pill">{formatState(selectedLead.estado)}</span></div><dl className="lead-facts"><div><dt>Vehículo de interés</dt><dd>{vehicles[selectedLead.vehiculoId]?.name || '-'}<small>{vehicles[selectedLead.vehiculoId]?.detail || ''}</small></dd></div><div><dt>Motivos</dt><dd>{(detail?.calificacion?.motivos || []).map((motivo) => <span className="reason" key={motivo.id}>{motivo.descripcion}</span>)}</dd></div></dl><div className="detail-actions"><button onClick={takeLead}>Tomar lead</button><button onClick={referLead}>Derivar al vendedor</button><button className="outline-action" onClick={correctLead}>Corregir nivel</button><button className="danger-action" onClick={discardLead}>Descartar</button></div>{feedback && <p className="action-feedback">{feedback}</p>}<div className="history"><h3>Historial de calificaciones</h3>{(detail?.historial || []).map((item, index) => <div className="history-row" key={`${item.calculadaEn}-${index}`}><span>{item.origen === 'MANUAL' ? 'Manual' : 'Automática'}</span><b>{nivelLegible(item.nivel)} · {item.puntaje}</b><small>{item.calculadaEn ? new Date(item.calculadaEn).toLocaleString('es-AR') : '-'}{item.observacion && ` · ${item.observacion}`}</small></div>)}</div></aside> : <aside className="empty-detail"><span>←</span><strong>Seleccioná un lead</strong><p>Acá vas a ver la ficha, la calificación y las acciones disponibles.</p></aside>}</div>
   </main>
