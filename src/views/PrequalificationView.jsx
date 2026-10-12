@@ -10,6 +10,7 @@ import SuccessMessage from '../components/SuccessMessage'
 import TradeInOptions from '../components/TradeInOptions'
 import VehicleSelection from '../components/VehicleSelection'
 import { getVehicles } from '../api/vehiclesClient'
+import { buildPreformulario, crearLead } from '../api/leadsClient'
 import { createChallenge, isCorrectAnswer } from '../utils/captcha'
 import { formatCuil } from '../utils/formatters'
 import { fieldValidators, validateForm } from '../utils/validators'
@@ -37,6 +38,8 @@ function PrequalificationView() {
   const [vehiclesError, setVehiclesError] = useState('')
   const [form, setForm] = useState(initialForm)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [step, setStep] = useState(1)
   const [leadId, setLeadId] = useState('')
   const [errors, setErrors] = useState({})
@@ -108,8 +111,19 @@ function PrequalificationView() {
     }
 
     refreshCaptcha()
-    setLeadId(`DDA-${Date.now().toString().slice(-6)}`)
-    setSubmitted(true)
+    setSubmitting(true)
+    setSubmitError('')
+
+    crearLead(buildPreformulario(form))
+      .then((data) => {
+        setLeadId(data.lead_id || data.leadId || '')
+        setSubmitted(true)
+      })
+      .catch((error) => {
+        const detail = error?.response?.data?.detail || error?.message || 'No pudimos enviar el formulario.'
+        setSubmitError(detail)
+      })
+      .finally(() => setSubmitting(false))
   }
 
   // Sin financiación no se pide CUIL: se descarta lo cargado y sus errores.
@@ -164,9 +178,10 @@ function PrequalificationView() {
 
             <div className="submit-row">
               {step === 2 && <button type="button" className="secondary-button" onClick={skipFinancing}>Seguir sin financiación</button>}
-              <button type="submit">{step === 1 && form.financing ? 'Continuar' : 'Enviar preformulario'} <span>→</span></button>
+              <button type="submit" disabled={submitting}>{submitting ? 'Enviando…' : step === 1 && form.financing ? 'Continuar' : 'Enviar preformulario'} <span>→</span></button>
               <p>Sin compromiso <span>·</span> Tus datos están protegidos</p>
             </div>
+            {submitError && <p className="action-feedback" role="alert">{submitError}</p>}
           </form>
 
           {submitted && <SuccessMessage name={form.firstName} leadId={leadId} onReset={resetForm} />}
