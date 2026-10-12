@@ -44,7 +44,19 @@ function VehicleSelection({ vehicles, loading, error, selectedId, selectionError
 
   return (
     <>
-      {loading && <p className="vehicle-empty" role="status">Cargando vehículos disponibles...</p>}
+      {loading && (
+        <div className="vehicle-list vehicle-skeletons" role="status" aria-busy="true">
+          <span className="sr-only">Cargando vehículos disponibles...</span>
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="vehicle-option vehicle-skeleton" aria-hidden="true">
+              <span className="vehicle-thumb" />
+              <span className="skeleton-line skeleton-title" />
+              <span className="skeleton-line" />
+              <span className="skeleton-line skeleton-price" />
+            </div>
+          ))}
+        </div>
+      )}
       {!loading && error && <VehicleEmptyState title="No pudimos cargar los vehículos" message={error} onRetry={onRetry} />}
       {!loading && !error && !vehicles.length && <VehicleEmptyState title="Sin vehículos por ahora" message="No hay vehículos disponibles en este momento. Probá de nuevo en unos minutos." onRetry={onRetry} />}
       {!loading && !error && vehicles.length > 0 && <>
