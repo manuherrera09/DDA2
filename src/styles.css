@@ -214,3 +214,6 @@ select {
 }
 .vehicle-option .vehicle-thumb.has-photo { padding: 0; }
 .vehicle-option .vehicle-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.vehicle-error { margin: 8px 0 0 45px; }
+.vehicle-error.field-invalid ~ .vehicle-list, .vehicle-list:has(+ .vehicle-error.field-invalid) { outline: 1px solid #b3402a; outline-offset: 4px; }
+@media (max-width: 560px) { .vehicle-error { margin-left: 0; } }

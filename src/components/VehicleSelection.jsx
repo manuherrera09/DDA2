@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { normalizeText } from '../utils/text'
+import FieldError from './FieldError'
 import FormField from './FormField'
 import VehicleFilters from './VehicleFilters'
 import VehicleOption from './VehicleOption'
@@ -26,7 +27,7 @@ function roundedBounds(values, step) {
   }
 }
 
-function VehicleSelection({ vehicles, loading, error, selectedId, downPayment, financing, onChange }) {
+function VehicleSelection({ vehicles, loading, error, selectedId, selectionError, downPayment, financing, onChange }) {
   const [filters, setFilters] = useState(noFilters)
 
   const priceBounds = useMemo(() => vehicles.length ? roundedBounds(vehicles.map((v) => v.price), PRICE_STEP) : { min: 0, max: 0 }, [vehicles])
@@ -57,6 +58,7 @@ function VehicleSelection({ vehicles, loading, error, selectedId, downPayment, f
           ))}
           {visible.length === 0 && <p className="vehicle-empty">No hay vehículos que coincidan con los filtros.</p>}
         </div>
+        <div className={`vehicle-error ${selectionError ? 'field-invalid' : ''}`}><FieldError message={selectionError} /></div>
       </>}
       <div className="field-row finance-row">
         <FormField label="Anticipo en efectivo" optional>

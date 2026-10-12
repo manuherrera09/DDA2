@@ -52,6 +52,10 @@ export function validateConsent(checked) {
   return checked ? '' : 'Necesitamos tu consentimiento para consultar tu situación crediticia.'
 }
 
+export function validateVehicle(value) {
+  return value ? '' : 'Elegí un vehículo para continuar.'
+}
+
 // Paso 1: datos de contacto. Paso 2 (solo con financiación): CUIL y consentimiento.
 const stepValidators = {
   1: {
@@ -59,6 +63,7 @@ const stepValidators = {
     lastName: (value) => validateName(value, 'El apellido'),
     phone: validatePhone,
     email: validateEmail,
+    vehicle: validateVehicle,
   },
   2: {
     cuil: validateCuil,
