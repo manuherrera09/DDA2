@@ -93,6 +93,11 @@ export function normalizeLead(lead) {
     permutaDescripcion: lead.permutaDescripcion ?? lead.permuta_descripcion,
     permutaValorDeclarado: lead.permutaValorDeclarado ?? lead.permuta_valor_declarado,
     permutaComputable: lead.permutaComputable ?? lead.permuta_computable,
+    resumen: lead.resumen,
+    resumenGeneradoEn: lead.resumenGeneradoEn ?? lead.resumen_generado_en,
+    anticipo: lead.anticipo,
+    provincia: lead.provincia,
+    localidad: lead.localidad,
     creadoEn: lead.creadoEn ?? lead.creado_en,
   }
 }
