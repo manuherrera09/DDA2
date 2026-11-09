@@ -9,4 +9,5 @@ export const API_ENDPOINTS = {
   CLIENTES: '/clientes',
   VEHICULOS: '/vehiculos',
   CALIFICACIONES: '/calificaciones',
+  MONITOR: '/monitor',
 }

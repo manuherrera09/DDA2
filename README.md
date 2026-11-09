@@ -8,6 +8,7 @@ Este repositorio contiene **solo el frontend**. Los microservicios (`leads`, `cl
 
 - **Preformulario** (`/` o `/preformulario`): el prospecto completa sus datos, elige un vehículo del stock, indica anticipo, permuta y ubicación, y opcionalmente solicita financiación con su CUIL y consentimiento.
 - **Cola del telemarketer** (`/cola` o `/cola-telemarketer`): lista de leads calificados con filtro por nivel (No potable, Potable, Muy potable), ficha, motivos, historial y acciones (tomar, derivar, descartar, corregir el nivel).
+- **Health Dashboard** (`/monitor` o `/health`): panel de monitoreo de salud de los microservicios (`vehiculos`, `clientes`, `leads`, `calificacion`) con semáforo de estado (`UP`, `DEGRADADO`, `DOWN`), latencia en milisegundos, historial de verificaciones y botón de ping/reactivación (*wake-up*).
 
 ## Requisitos
 
@@ -27,10 +28,15 @@ En este proyecto se usa **pnpm** para todos los comandos de Node.
 
 ### Variables de entorno
 
-Copiar `.env.example` a `.env` si hace falta cambiar la URL del gateway:
+Copiar `.env.example` a `.env` si hace falta cambiar las URLs de los microservicios:
 
 ```env
 VITE_API_URL=http://localhost:8080/api
+VITE_VEHICULOS_API_URL=http://localhost:8083
+VITE_LEADS_API_URL=http://localhost:8000
+VITE_CALIFICACION_API_URL=http://localhost:8084
+VITE_CLIENTES_API_URL=http://localhost:8082
+VITE_MONITOR_API_URL=http://localhost:8085
 ```
 
 ## Stack
@@ -60,8 +66,9 @@ docs/             documentación para el equipo
 | Validaciones | Nombre y apellido (solo letras), email obligatorio con formato válido, teléfono opcional (10 a 13 dígitos). Si se solicita financiación, el CUIL es obligatorio y se valida (11 dígitos, prefijo 20/23/24/27 y dígito verificador) y el consentimiento también. |
 | Selección de vehículo | 12 vehículos hardcodeados en `src/data/vehicles.js`, con filtros en memoria por marca y modelo (autocompletado), caja, año, precio y kilómetros, y lista con scroll a partir de 6 unidades. `fotoUrl` es opcional: si falta, se muestra un bloque de color. |
 | Captcha | Operación aritmética local, antes del envío final. No verifica nada en servidor. |
-| Cola del telemarketer | Funcional sobre 3 leads de ejemplo; los cambios de estado y las correcciones viven solo en memoria. |
-| Integración con los microservicios | Pendiente. `src/api/axiosClient.js` y `src/utils/constants.js` ya definen la base. |
+| Cola del telemarketer | Funcional e integrada con los microservicios de leads, clientes, vehículos y calificación. |
+| Health Dashboard (`/monitor`) | Funcional. Consume `GET /monitor/estado`, `GET /monitor/historial`, `POST /monitor/verificar` y `POST /monitor/despertar` del microservicio Monitor (`VITE_MONITOR_API_URL`), con respaldo de sondeo HTTP directo si el servicio monitor no está activo. |
+| Integración con los microservicios | Integrada mediante `leadsClient.js`, `vehiclesClient.js` y `monitorClient.js`. |
 
 ## Documentación
 
