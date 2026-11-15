@@ -68,13 +68,13 @@ const stepValidators = {
   1: {
     firstName: (value) => validateName(value, 'El nombre'),
     lastName: (value) => validateName(value, 'El apellido'),
-    patente: validatePatente,
     phone: validatePhone,
     email: validateEmail,
     vehicle: validateVehicle,
   },
   2: {
     cuil: validateCuil,
+    patente: validatePatente,
     consent: validateConsent,
   },
 }
