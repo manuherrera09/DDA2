@@ -14,9 +14,6 @@ function FinancingDetails({ form, errors, onChange, onBlur }) {
           <FormField label="CUIL" error={errors.cuil ?? ''}>
             <input name="cuil" value={form.cuil} onChange={onChange} onBlur={onBlur} inputMode="numeric" autoComplete="off" placeholder="Ej. 20-12345678-6" aria-invalid={Boolean(errors.cuil)} />
           </FormField>
-          <FormField label="Patente" error={errors.patente ?? ''}>
-            <input name="patente" value={form.patente} onChange={onChange} onBlur={onBlur} type="text" autoComplete="off" maxLength="7" placeholder="Ej. AB123CD" aria-invalid={Boolean(errors.patente)} />
-          </FormField>
         </div>
         <div className="field-row">
           <div className={`consent-field ${errors.consent ? 'field-invalid' : ''}`}>

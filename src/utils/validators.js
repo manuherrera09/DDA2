@@ -79,13 +79,17 @@ const stepValidators = {
   },
 }
 
-export const fieldValidators = { ...stepValidators[1], ...stepValidators[2] }
+export const fieldValidators = { ...stepValidators[1], ...stepValidators[2], patente: validatePatente }
 
 export function validateForm(form, step = 1) {
   const errors = {}
   for (const [field, validate] of Object.entries(stepValidators[step])) {
     const message = validate(form[field] ?? '')
     if (message) errors[field] = message
+  }
+  if (step === 1 && form.tradeIn === 'yes') {
+    const message = validatePatente(form.patente ?? '')
+    if (message) errors.patente = message
   }
   return errors
 }

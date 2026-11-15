@@ -43,6 +43,7 @@ export function buildPreformulario(form) {
       tienePermuta,
       descripcion: tienePermuta ? form.tradeDescription.trim() : null,
       valorDeclarado: tienePermuta ? aNumero(form.tradeValue) : null,
+      patente: tienePermuta ? form.patente.trim().replace(/[ -]/g, '').toUpperCase() : null,
     },
     ubicacion: {
       provincia: normalizarProvincia(form.province),
