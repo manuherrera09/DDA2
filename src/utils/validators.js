@@ -26,6 +26,13 @@ export function validateEmail(value) {
   return ''
 }
 
+export function validatePatente(value) {
+  const text = value.trim().replace(/[ -]/g, '')
+  if (!text) return 'La patente es obligatoria.'
+  if (!/^[A-Za-z0-9]{6,7}$/.test(text)) return 'Ingresá una patente válida de 6 o 7 caracteres.'
+  return ''
+}
+
 const CUIL_PREFIXES = ['20', '23', '24', '27']
 const CUIL_WEIGHTS = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
 
@@ -61,6 +68,7 @@ const stepValidators = {
   1: {
     firstName: (value) => validateName(value, 'El nombre'),
     lastName: (value) => validateName(value, 'El apellido'),
+    patente: validatePatente,
     phone: validatePhone,
     email: validateEmail,
     vehicle: validateVehicle,

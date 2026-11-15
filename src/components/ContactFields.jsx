@@ -21,6 +21,11 @@ function ContactFields({ form, errors, onChange, onBlur }) {
           <input {...props('email')} type="text" inputMode="email" placeholder="Ej. nombre@gmail.com" autoComplete="email" />
         </FormField>
       </div>
+      <div className="field-row">
+        <FormField label="Patente" error={errors.patente ?? ''}>
+          <input {...props('patente')} type="text" placeholder="Ej. AB123CD" autoComplete="off" maxLength="7" />
+        </FormField>
+      </div>
     </>
   )
 }
