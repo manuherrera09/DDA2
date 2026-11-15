@@ -8,6 +8,7 @@ Este repositorio contiene **solo el frontend**. Los microservicios (`leads`, `cl
 
 - **Preformulario** (`/` o `/preformulario`): el prospecto completa sus datos, elige un vehículo del stock, indica anticipo, permuta y ubicación, y opcionalmente solicita financiación con su CUIL y consentimiento.
 - **Cola del telemarketer** (`/cola` o `/cola-telemarketer`): lista de leads calificados con filtro por nivel (No potable, Potable, Muy potable), ficha, motivos, historial y acciones (tomar, derivar, descartar, corregir el nivel).
+  Requiere iniciar sesión (ver [Login del operador](#login-del-operador)).
 - **Health Dashboard** (`/monitor` o `/health`): panel de monitoreo de salud de los microservicios (`vehiculos`, `clientes`, `leads`, `calificacion`) con semáforo de estado (`UP`, `DEGRADADO`, `DOWN`), latencia en milisegundos, historial de verificaciones y botón de ping/reactivación (*wake-up*).
 
 ## Requisitos
@@ -66,9 +67,9 @@ docs/             documentación para el equipo
 | Validaciones | Nombre y apellido (solo letras), email obligatorio con formato válido, teléfono opcional (10 a 13 dígitos). Si se solicita financiación, el CUIL es obligatorio y se valida (11 dígitos, prefijo 20/23/24/27 y dígito verificador) y el consentimiento también. |
 | Selección de vehículo | 12 vehículos hardcodeados en `src/data/vehicles.js`, con filtros en memoria por marca y modelo (autocompletado), caja, año, precio y kilómetros, y lista con scroll a partir de 6 unidades. `fotoUrl` es opcional: si falta, se muestra un bloque de color. |
 | Captcha | Operación aritmética local, antes del envío final. No verifica nada en servidor. |
-| Cola del telemarketer | Funcional e integrada con los microservicios de leads, clientes, vehículos y calificación. |
+| Cola del telemarketer | Funcional, detrás de login de operador, y consume leads, clientes, vehículos y calificación a través del orquestador. |
 | Health Dashboard (`/monitor`) | Funcional. Consume `GET /monitor/estado`, `GET /monitor/historial`, `POST /monitor/verificar` y `POST /monitor/despertar` del microservicio Monitor (`VITE_MONITOR_API_URL`), con respaldo de sondeo HTTP directo si el servicio monitor no está activo. |
-| Integración con los microservicios | Integrada mediante `leadsClient.js`, `vehiclesClient.js` y `monitorClient.js`. |
+| Integración con los microservicios | Todo pasa por el orquestador (`axiosClient.js`, `VITE_API_URL`) mediante `leadsClient.js`, `vehiclesClient.js` y `authClient.js`. Solo `monitorClient.js` (Health Dashboard) llama directo al servicio monitor. |
 
 ## Documentación
 
@@ -78,3 +79,14 @@ docs/             documentación para el equipo
 
 - Commits con formato [Conventional Commits](https://www.conventionalcommits.org/) y una descripción breve, por ejemplo `feat: agrego filtros de vehículos`.
 - Los cambios entran por pull request.
+
+## Login del operador
+
+La cola del telemarketer (`/cola`) pide iniciar sesión con un usuario de `AuthMicroservice`. El preformulario y el catálogo de vehículos **no** piden login.
+
+- `src/auth/sesion.js`: guarda `access_token` y `refresh_token` en `sessionStorage` (se pierden al cerrar la pestaña; sin `sessionStorage` quedan en memoria).
+- `src/api/axiosClient.js`: agrega `Authorization: Bearer` a cada pedido. Si el orquestador responde `401` con `codigo: TOKEN_EXPIRADO`, renueva con `POST /auth/refresh` (una sola vez aunque fallen varios pedidos a la vez) y repite el pedido. Si el refresh falla o el token fue revocado, vuelve al login.
+- `src/pages/LoginPage.jsx`: formulario de login. Ante un `429` del límite de intentos muestra una cuenta regresiva con el `Retry-After` del servidor (5 minutos).
+- **Cerrar sesión** llama a `POST /auth/logout`: el orquestador invalida el token en el acto.
+
+Para probar en local hace falta el orquestador (`:8080`) con `JWT_SECRET` y el servicio de auth (`:8086`) corriendo; ver la guía de desarrollo local del orquestador.

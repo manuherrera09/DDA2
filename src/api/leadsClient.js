@@ -1,26 +1,11 @@
-import axios from 'axios'
+import axiosClient from './axiosClient'
 
-// No hay API Gateway en este despliegue: cada microservicio se expone en su propio
-// puerto. Este cliente apunta directo a leads y delega calificaciones/clientes en
-// sus propios clientes.
-const VITE_LEADS_API_URL = import.meta.env.VITE_LEADS_API_URL || 'http://localhost:8000'
-const VITE_CALIFICACION_API_URL = import.meta.env.VITE_CALIFICACION_API_URL || 'http://localhost:8084'
-const VITE_CLIENTES_API_URL = import.meta.env.VITE_CLIENTES_API_URL || 'http://localhost:8082'
-
-const leadsClient = axios.create({
-  baseURL: VITE_LEADS_API_URL,
-  headers: { 'Content-Type': 'application/json' },
-})
-
-const calificacionesClient = axios.create({
-  baseURL: VITE_CALIFICACION_API_URL,
-  headers: { 'Content-Type': 'application/json' },
-})
-
-const clientesClient = axios.create({
-  baseURL: VITE_CLIENTES_API_URL,
-  headers: { 'Content-Type': 'application/json' },
-})
+// Todo pasa por el orquestador (API Gateway, `VITE_API_URL`): /api/leads,
+// /api/clientes y /api/calificaciones. El preformulario (POST /leads) es público;
+// el resto exige sesión de operador y axiosClient agrega el token.
+const leadsClient = axiosClient
+const calificacionesClient = axiosClient
+const clientesClient = axiosClient
 
 const PROVINCIAS = {
   'Buenos Aires': 'BUENOS_AIRES',

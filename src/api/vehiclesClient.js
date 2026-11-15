@@ -1,11 +1,7 @@
-import axios from 'axios'
+import axiosClient from './axiosClient'
 
-const vehiclesClient = axios.create({
-  baseURL: import.meta.env.VITE_VEHICULOS_API_URL || 'https://vehiculosmicroservice.onrender.com',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+// El catálogo es público, pero también pasa por el orquestador (/api/vehiculos).
+const vehiclesClient = axiosClient
 
 function formatTransmission(caja) {
   if (caja === 'AUTOMATICA') return 'Automática'
