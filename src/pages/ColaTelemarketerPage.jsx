@@ -240,7 +240,8 @@ function ColaTelemarketerPage() {
 
   function clienteNombre(cliente) {
     if (!cliente) return '-'
-    return [cliente.nombre, cliente.apellido].filter(Boolean).join(' ')
+    const nombre = [cliente.nombre, cliente.apellido].filter(Boolean).join(' ')
+    return `${nombre || '-'} · Patente: ${cliente.patente || '-'}`
   }
 
   return <main className="queue-shell">

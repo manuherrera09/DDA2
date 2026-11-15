@@ -18,6 +18,7 @@ import { fieldValidators, validateForm } from '../utils/validators'
 const initialForm = {
   firstName: '',
   lastName: '',
+  patente: '',
   phone: '',
   email: '',
   vehicle: '',
