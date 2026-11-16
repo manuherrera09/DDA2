@@ -35,7 +35,6 @@ export function buildPreformulario(form) {
       nombre: form.firstName.trim(),
       apellido: form.lastName.trim(),
       email: form.email.trim(),
-      patente: form.patente.trim().replace(/[ -]/g, '').toUpperCase(),
     },
     vehiculoId: form.vehicle,
     anticipo: aNumero(form.downPayment),

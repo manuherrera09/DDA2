@@ -74,7 +74,6 @@ const stepValidators = {
   },
   2: {
     cuil: validateCuil,
-    patente: validatePatente,
     consent: validateConsent,
   },
 }
